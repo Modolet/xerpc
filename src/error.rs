@@ -30,6 +30,11 @@ pub(crate) enum ParseErrorKind {
         #[label("integer defined here")]
         span: Span,
     },
+    #[error("invalid float")]
+    InvalidFloat {
+        #[label("float defined here")]
+        span: Span,
+    },
     #[error("invalid string character")]
     InvalidStringCharacters {
         #[label("invalid characters")]
@@ -275,6 +280,7 @@ impl ParseError {
             ParseErrorKind::IntegerValueOutOfRange { span, .. } => Some(span.clone()),
             ParseErrorKind::EmptyOneof { span } => Some(span.clone()),
             ParseErrorKind::FileTooLarge => None,
+            ParseErrorKind::InvalidFloat { span } => Some(span.clone()),
         }
     }
 }
