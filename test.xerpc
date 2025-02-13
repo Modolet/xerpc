@@ -1,66 +1,33 @@
-// 单行注释
 
-/*
- 多行注释
- */
+/// Service documentation
+service UserService;
 
-// 类型关键字
-// u8 i8 u16 i16 u32 i32 u64 i64 f32 f64 bool str void
-// 语句关键字
-// struct enum service interface callback
-
-// 结构体声明
-struct User {
-    name: str,
-    age: i32, // 末尾的逗号可选
-}
-
-// 枚举声明(可以附带参数)
+/// Color enum
 enum Color {
-    Red(u8,u8),
+    Red(u8, u8),
     Green,
     Blue,
 }
 
-// 服务声明
-service UserService
-
-// 定义普通常量
-/// 文档注释：圆周率
-PI: f64 = 3.1415926
-NUM1: i32 = 0x2333
-NUM2: u8 = 0b1010
-NUM3: i64 = 0o777
-name: str = "xerpc"
-
-// 数组类型常量
-NUMS: [i32; 5] = [1, 2, 3, 4, 5]
-NUMS: [i32] = [1, 2, 3, 4, 5]
-
-
-// 定义结构体常量
-ADMIN: User = {
-    name: "admin",
-    age: 18,
+/// User struct
+struct User {
+    name: str,
+    age: u32,
 }
 
-// 定义枚举常量
-COLOR: Color = Color::Red(255, 0)
+/// Constant A
+const A: u32 = 32;
 
-// 定义回调
-callback fncallback(i32, i32) -> i32
+/// Callback example
+callback Example(u32, bool) -> str;
 
-// 定义服务的rpc
+/// rpc的文档注释，只能在头部
 interface UserInterface: UserService {
+    /// get_user的文档注释
     fn get_user(userid i32) -> User
-    fn get_users() -> [User]
+    fn get_users() -> [User] 
     fn add_user(user User) -> i32
     fn del_user(userid i32) -> i32; // 末尾的分号可选
-    fn update_user(User) -> i32
-    fn heartbeat(callback fncallback)->void
+    fn heartbeat(mycallback fncallback) -> void
 }
 
-interface Math: UserService {
-    fn add(val1 i32,val2 i32) -> i32
-    fn sub(val1 i32,val2 i32) -> i32
-}
