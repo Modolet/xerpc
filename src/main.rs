@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use chumsky::Parser;
 use logos::Logos;
 use parser::root_parser;
@@ -7,8 +5,6 @@ use token::Token;
 mod error;
 mod parser;
 mod token;
-
-const MAX_MESSAGE_FIELD_NUMBER: i32 = 536_870_911;
 
 fn get_tokens(input: &str) -> Vec<Token> {
     Token::lexer(input)

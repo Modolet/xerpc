@@ -31,3 +31,4 @@ interface UserInterface: UserService {
     fn heartbeat(mycallback fncallback) -> void
 }
 
+abc

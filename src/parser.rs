@@ -6,7 +6,6 @@ use crate::token::Token;
 // 定义 AST 节点类型
 /// Root 解析器
 pub fn root_parser() -> impl Parser<Token, Root, Error = Simple<Token>> {
-    // 将所有顶级解析器组合在一起
     let service = service_parser().map(RootItem::Service);
     let enm = enum_parser().map(RootItem::Enum);
     let structure = struct_parser().map(RootItem::Struct);
@@ -14,7 +13,6 @@ pub fn root_parser() -> impl Parser<Token, Root, Error = Simple<Token>> {
     let callback = callback_parser().map(RootItem::Callback);
     let interface = interface_parser().map(RootItem::Interface);
 
-    // 解析顶级节点，忽略空行或注释
     let root_item = service
         .or(enm)
         .or(structure)
@@ -22,37 +20,39 @@ pub fn root_parser() -> impl Parser<Token, Root, Error = Simple<Token>> {
         .or(callback)
         .or(interface);
 
-    // 重复解析所有顶级节点
-    root_item.repeated().map(|items| {
-        let mut services = Vec::new();
-        let mut enums = Vec::new();
-        let mut structs = Vec::new();
-        let mut constants = Vec::new();
-        let mut callbacks = Vec::new();
-        let mut interfaces = Vec::new();
+    root_item
+        .repeated()
+        .map(|items| {
+            let mut services = Vec::new();
+            let mut enums = Vec::new();
+            let mut structs = Vec::new();
+            let mut constants = Vec::new();
+            let mut callbacks = Vec::new();
+            let mut interfaces = Vec::new();
 
-        // 将解析结果分类到对应的字段中
-        for item in items {
-            match item {
-                RootItem::Service(service) => services.push(service),
-                RootItem::Enum(enm) => enums.push(enm),
-                RootItem::Struct(structure) => structs.push(structure),
-                RootItem::Constant(constant) => constants.push(constant),
-                RootItem::Callback(callback) => callbacks.push(callback),
-                RootItem::Interface(interface) => interfaces.push(interface),
+            for item in items {
+                match item {
+                    RootItem::Service(service) => services.push(service),
+                    RootItem::Enum(enm) => enums.push(enm),
+                    RootItem::Struct(structure) => structs.push(structure),
+                    RootItem::Constant(constant) => constants.push(constant),
+                    RootItem::Callback(callback) => callbacks.push(callback),
+                    RootItem::Interface(interface) => interfaces.push(interface),
+                }
             }
-        }
 
-        Root {
-            services,
-            enums,
-            structs,
-            constants,
-            callbacks,
-            interfaces,
-        }
-    })
+            Root {
+                services,
+                enums,
+                structs,
+                constants,
+                callbacks,
+                interfaces,
+            }
+        })
+        .then_ignore(end()) // 确保解析器消费了所有输入
 }
+
 /// 定义顶级节点的枚举类型，用于分类解析结果
 #[derive(Debug, PartialEq)]
 enum RootItem {
@@ -143,6 +143,7 @@ pub enum ConstantValue {
     Enum(EnumInit),            // 枚举初始化
     Array(Vec<ConstantValue>), // 数组初始化
     String(String),            // 字符串
+    Constant(String),          // 其他常量
 }
 
 /// 服务
@@ -195,7 +196,6 @@ pub enum Type {
     Primitive(String),
     Custom(String),
     Array(Box<Type>, Option<usize>),
-    Callback(String),
     Void,
 }
 
@@ -321,6 +321,7 @@ fn ty() -> impl Parser<Token, Type, Error = Simple<Token>> {
 
         array_ty
             .or(primitive_type())
+            .or(just(Token::Void).map(|_| Type::Void))
             .or(ident().map(Type::Custom)) // 自定义类型
             .labelled("type")
     })
@@ -433,6 +434,7 @@ fn expr() -> impl Parser<Token, ConstantValue, Error = Simple<Token>> {
             Token::String(value) => ConstantValue::String(value),
             Token::True => ConstantValue::Bool(true),
             Token::False => ConstantValue::Bool(false),
+        Token::Identifier(value) =>ConstantValue::Constant(value)
         })
     })
 }
@@ -894,16 +896,5 @@ mod test {
                 }],
             })
         );
-    }
-
-    #[test]
-    fn my_test() {
-        let input = r#"
-            const A:User = { name: "123", age: 123 };
-        "#;
-        let tokens = get_tokens(input);
-        dbg!(&tokens);
-        let result = constant_parser().parse(tokens);
-        dbg!(result);
     }
 }
